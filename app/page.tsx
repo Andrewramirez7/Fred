@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import PetAvatar from "@/components/PetAvatar";
 import StatBar from "@/components/StatBar";
 import ChatPanel from "@/components/ChatPanel";
+import { generateReply } from "@/lib/chatEngine";
 import {
   applyDecay,
   feed,
@@ -61,38 +62,15 @@ export default function Home() {
     };
     setState(withUser);
     setPending(true);
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: withUser.name,
-          stats: withUser.stats,
-          messages: withUser.messages,
-        }),
-      });
-      const data = await res.json();
-      const replyText: string = res.ok
-        ? data.reply
-        : `*static crackles* ...something's wrong: ${data.error ?? "unknown error"}`;
-      setState((s) =>
-        s ? { ...s, messages: [...s.messages, { role: "pet", text: replyText }] } : s
-      );
-    } catch {
-      setState((s) =>
-        s
-          ? {
-              ...s,
-              messages: [
-                ...s.messages,
-                { role: "pet", text: "*the screen flickers* ...i couldn't hear that, try again?" },
-              ],
-            }
-          : s
-      );
-    } finally {
-      setPending(false);
-    }
+
+    // Small delay so the reply feels like a real back-and-forth instead of instant.
+    const replyText = generateReply(text, withUser.name, withUser.stats);
+    await new Promise((r) => setTimeout(r, 400 + Math.random() * 500));
+
+    setState((s) =>
+      s ? { ...s, messages: [...s.messages, { role: "pet", text: replyText }] } : s
+    );
+    setPending(false);
   }
 
   if (state === null) {
