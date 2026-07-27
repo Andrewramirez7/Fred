@@ -1,3 +1,5 @@
+import type { CharacterId } from "./themes";
+
 export type Stats = {
   hunger: number; // 0 = starving, 10 = full
   happiness: number; // 0 = miserable, 10 = joyful
@@ -11,6 +13,7 @@ export type ChatMessage = {
 
 export type PetState = {
   name: string;
+  characterId: CharacterId;
   stats: Stats;
   lastUpdated: number; // epoch ms
   messages: ChatMessage[];
@@ -18,11 +21,10 @@ export type PetState = {
 
 export const STORAGE_KEY = "tamagotchi-state-v1";
 
-export const DEFAULT_NAME = "Kuro";
-
-export function freshState(name: string = DEFAULT_NAME): PetState {
+export function freshState(name: string): PetState {
   return {
     name,
+    characterId: "ninja",
     stats: { hunger: 8, happiness: 8, energy: 8 },
     lastUpdated: Date.now(),
     messages: [
@@ -32,6 +34,11 @@ export function freshState(name: string = DEFAULT_NAME): PetState {
       },
     ],
   };
+}
+
+/** Fills in fields missing from state saved before they were added. */
+export function migrateState(raw: Partial<PetState>): PetState {
+  return { characterId: "ninja", ...raw } as PetState;
 }
 
 const clamp = (n: number) => Math.max(0, Math.min(10, n));
@@ -89,18 +96,18 @@ export function mood(stats: Stats): string {
   return "content";
 }
 
-export function moodEmoji(stats: Stats): string {
-  const m = mood(stats);
-  switch (m) {
+/** A soft glow color behind the avatar that reflects its current mood. */
+export function moodGlow(stats: Stats): string {
+  switch (mood(stats)) {
     case "hungry":
-      return "🥷🍙";
+      return "#ffb703";
     case "sleepy":
-      return "🥷💤";
+      return "#8ecae6";
     case "grumpy":
-      return "🥷💢";
+      return "#ff4d4d";
     case "ecstatic":
-      return "🥷✨";
+      return "#ffd60a";
     default:
-      return "🥷";
+      return "transparent";
   }
 }
