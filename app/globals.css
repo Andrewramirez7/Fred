@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: radial-gradient(circle at top, #2a2140 0%, #14101f 70%);
+}
+
+* {
+  image-rendering: pixelated;
+}
