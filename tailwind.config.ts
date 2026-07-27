@@ -5,9 +5,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        shell: "#d9c7f0",
-        screen: "#9fce6b",
-        screendark: "#3d5c33",
+        shell: "#1c1c1c",
+        screen: "#0f1f13",
+        screendark: "#173820",
+        ninja: "#39ff14",
+        mist: "#d7f5df",
       },
       fontFamily: {
         pixel: ["'Courier New'", "ui-monospace", "monospace"],

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Chip | Your Tamagotchi",
-  description: "A tiny digital pet you can chat with.",
+  title: "Ninja Tamagotchi",
+  description: "A tiny ninja pet you can chat with — summoned in a puff of smoke, ready for training.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

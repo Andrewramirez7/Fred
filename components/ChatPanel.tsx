@@ -30,21 +30,21 @@ export default function ChatPanel({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto space-y-2 p-2 bg-black/10 rounded-sm border border-black/30">
+      <div className="flex-1 overflow-y-auto space-y-2 p-2 bg-black/30 rounded-sm border border-ninja/20">
         {messages.map((m, i) => (
           <div
             key={i}
             className={`max-w-[85%] text-xs px-2 py-1.5 rounded-sm ${
               m.role === "pet"
-                ? "bg-white/80 text-screendark mr-auto"
-                : "bg-screendark text-white ml-auto"
+                ? "bg-black/40 text-mist border border-mist/10 mr-auto"
+                : "bg-ninja text-black ml-auto"
             }`}
           >
             {m.text}
           </div>
         ))}
         {disabled && (
-          <div className="max-w-[85%] text-xs px-2 py-1.5 rounded-sm bg-white/60 text-screendark mr-auto italic">
+          <div className="max-w-[85%] text-xs px-2 py-1.5 rounded-sm bg-black/40 text-mist/70 border border-mist/10 mr-auto italic">
             {name} is typing...
           </div>
         )}
@@ -57,12 +57,12 @@ export default function ChatPanel({
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder={`say something to ${name}...`}
           disabled={disabled}
-          className="flex-1 text-xs px-2 py-1.5 rounded-sm border border-black/30 bg-white/90 text-screendark placeholder:text-screendark/50 outline-none disabled:opacity-60"
+          className="flex-1 text-xs px-2 py-1.5 rounded-sm border border-ninja/30 bg-black/40 text-mist placeholder:text-mist/30 outline-none disabled:opacity-60"
         />
         <button
           onClick={submit}
           disabled={disabled}
-          className="text-xs px-3 py-1.5 rounded-sm bg-screendark text-white disabled:opacity-50"
+          className="text-xs px-3 py-1.5 rounded-sm bg-ninja text-black font-bold disabled:opacity-50"
         >
           send
         </button>

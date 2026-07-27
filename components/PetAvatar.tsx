@@ -8,7 +8,7 @@ export default function PetAvatar({ name, stats }: { name: string; stats: Stats 
   return (
     <div className="flex flex-col items-center gap-2 select-none">
       <div className="text-5xl animate-bob">{moodEmoji(stats)}</div>
-      <div className="text-screendark text-xs">
+      <div className="text-mist text-xs">
         {name} is feeling <span className="font-bold">{currentMood}</span>
       </div>
     </div>

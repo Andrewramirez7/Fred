@@ -12,6 +12,7 @@ import {
   rest,
   freshState,
   STORAGE_KEY,
+  DEFAULT_NAME,
   type PetState,
 } from "@/lib/pet";
 
@@ -50,7 +51,7 @@ export default function Home() {
   }, []);
 
   function hatch() {
-    const name = nameDraft.trim() || "Chip";
+    const name = nameDraft.trim() || DEFAULT_NAME;
     setState(freshState(name));
   }
 
@@ -76,24 +77,24 @@ export default function Home() {
   if (state === null) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-shell rounded-3xl border-4 border-black/40 shadow-2xl p-6 w-full max-w-sm text-center space-y-4">
-          <div className="text-4xl">🥚</div>
-          <h1 className="text-screendark text-sm">an egg is about to hatch!</h1>
-          <p className="text-screendark/70 text-xs">name your new tamagotchi:</p>
+        <div className="bg-shell rounded-3xl border-4 border-ninja/30 shadow-2xl shadow-ninja/10 p-6 w-full max-w-sm text-center space-y-4">
+          <div className="text-4xl">🥷💨</div>
+          <h1 className="text-mist text-sm">a shadow stirs in the dojo...</h1>
+          <p className="text-mist/60 text-xs">name your new ninja:</p>
           <input
             autoFocus
             value={nameDraft}
             onChange={(e) => setNameDraft(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && hatch()}
-            placeholder="Chip"
+            placeholder={DEFAULT_NAME}
             maxLength={16}
-            className="w-full text-center text-xs px-2 py-2 rounded-sm border border-black/30 bg-white/90 text-screendark outline-none"
+            className="w-full text-center text-xs px-2 py-2 rounded-sm border border-ninja/30 bg-black/40 text-mist placeholder:text-mist/30 outline-none"
           />
           <button
             onClick={hatch}
-            className="w-full text-xs px-3 py-2 rounded-sm bg-screendark text-white"
+            className="w-full text-xs px-3 py-2 rounded-sm bg-ninja text-black font-bold active:scale-95"
           >
-            hatch!
+            summon!
           </button>
         </div>
       </main>
@@ -102,34 +103,34 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-shell rounded-3xl border-4 border-black/40 shadow-2xl p-4 w-full max-w-sm">
-        <div className="bg-screen rounded-2xl border-4 border-black/30 p-3 space-y-3">
+      <div className="bg-shell rounded-3xl border-4 border-ninja/20 shadow-2xl shadow-ninja/10 p-4 w-full max-w-sm">
+        <div className="bg-screen rounded-2xl border-4 border-black/40 p-3 space-y-3">
           <PetAvatar name={state.name} stats={state.stats} />
 
           <div className="space-y-1.5">
             <StatBar label="hunger" value={state.stats.hunger} />
-            <StatBar label="happiness" value={state.stats.happiness} />
-            <StatBar label="energy" value={state.stats.energy} />
+            <StatBar label="spirit" value={state.stats.happiness} />
+            <StatBar label="chakra" value={state.stats.energy} />
           </div>
 
           <div className="grid grid-cols-3 gap-1.5">
             <button
               onClick={() => setState((s) => (s ? feed(s) : s))}
-              className="text-[10px] py-1.5 rounded-sm bg-white/80 text-screendark active:scale-95"
+              className="text-[10px] py-1.5 rounded-sm bg-black/40 text-ninja border border-ninja/30 active:scale-95"
             >
-              🍖 feed
+              🍙 feed
             </button>
             <button
               onClick={() => setState((s) => (s ? play(s) : s))}
-              className="text-[10px] py-1.5 rounded-sm bg-white/80 text-screendark active:scale-95"
+              className="text-[10px] py-1.5 rounded-sm bg-black/40 text-ninja border border-ninja/30 active:scale-95"
             >
-              🎾 play
+              🥋 train
             </button>
             <button
               onClick={() => setState((s) => (s ? rest(s) : s))}
-              className="text-[10px] py-1.5 rounded-sm bg-white/80 text-screendark active:scale-95"
+              className="text-[10px] py-1.5 rounded-sm bg-black/40 text-ninja border border-ninja/30 active:scale-95"
             >
-              💤 rest
+              🧘 meditate
             </button>
           </div>
 

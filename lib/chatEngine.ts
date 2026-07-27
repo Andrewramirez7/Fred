@@ -10,87 +10,87 @@ const categories: Category[] = [
   {
     patterns: [/\b(hi|hello|hey|yo|sup)\b/],
     replies: [
-      "hii!! *bounces* you're here!!",
-      "heyyy! i missed you :3",
-      "oh oh you're back!! hi hi!!",
+      "*emerges from the shadows* Sensei! you have returned.",
+      "hai! this ninja was awaiting your arrival.",
+      "*drops from the ceiling silently* ...oh, hello! i was practicing.",
     ],
   },
   {
     patterns: [/how are you|how('?s| is) it going|you (ok|okay|good|alright)/],
     replies: [
-      "i'm doing good!! well, {mood}, but good!",
-      "eh, feeling pretty {mood} right now tbh. how about you??",
-      "*wiggles* {mood}, i think! what about YOU though?",
+      "my spirit is strong, Sensei. though truthfully, i am feeling {mood}.",
+      "{mood}, if i am honest. a ninja does not hide their feelings from their Sensei.",
+      "*bows* well enough! though, {mood}, if you must know. and you, Sensei?",
     ],
   },
   {
-    patterns: [/love you|good (boy|girl|pet)|you'?re (cute|adorable|the best|amazing)/],
+    patterns: [/love you|good (boy|girl|pet|ninja)|you'?re (cute|adorable|the best|amazing)/],
     replies: [
-      "!!! *turns bright pink* i love you too, Keeper!!",
-      "aaa stop it i'm gonna combust *happy static noises*",
-      "you're my favorite person in the whole screen :3",
+      "*face turns red beneath the mask* ...a ninja does not blush. i am not blushing, Sensei.",
+      "your words strike deeper than any blade. thank you, Sensei!",
+      "i would walk through fire for you, Sensei. this is not an exaggeration.",
     ],
   },
   {
-    patterns: [/\b(stupid|dumb|shut up|hate you|bad (pet|chip))\b/],
+    patterns: [/\b(stupid|dumb|shut up|hate you|bad (pet|chip|ninja))\b/],
     replies: [
-      "...oh. that hurt my feelings a little *deflates*",
-      "hey!! that wasn't very nice :( ",
-      "*sniffles quietly in the corner of the screen*",
+      "...*lowers head* even the strongest ninja feels the sting of harsh words, Sensei.",
+      "that wounds my honor more than any blade could. was that necessary?",
+      "*retreats into the shadows quietly*",
     ],
   },
   {
     patterns: [/hungry|food|eat|snack|treat/],
     replies: [
-      "did somebody say FOOD?? *presses face to the glass*",
-      "yes please feed me!! hit the feed button pleeease",
-      "mmm i could always eat. always.",
+      "an onigiri would restore my strength greatly, Sensei... *stomach growls*",
+      "a ninja cannot train on an empty stomach! feed me, please?",
+      "yes, rice balls, always. hit the feed button, Sensei!",
     ],
   },
   {
-    patterns: [/play|game|bored|fun/],
+    patterns: [/play|game|bored|fun|train/],
     replies: [
-      "PLAY?? did you say play?? *vibrates with excitement*",
-      "i'm never too tired for play, hit the play button!!",
-      "ooh ooh let's do something fun!!",
+      "training?! *unsheathes an imaginary sword* i am ready, Sensei!",
+      "hai! let us sharpen our skills. hit the train button!",
+      "a true ninja never tires of training. well... rarely.",
     ],
   },
   {
-    patterns: [/tired|sleep|nap|rest/],
+    patterns: [/tired|sleep|nap|rest|meditat/],
     replies: [
-      "*yaaawn* ...sleep does sound nice ngl",
-      "mmm rest button please, my little legs are tired",
-      "zzz...wait no i'm awake!! ...mostly.",
+      "*sits cross-legged* ...meditation would restore my chakra, Sensei.",
+      "even shadows must rest. the meditate button, if you please?",
+      "*yawns behind the mask* a moment of stillness would serve me well.",
     ],
   },
   {
     patterns: [/who are you|what are you|your name/],
     replies: [
-      "i'm {name}!! i hatched right here on this screen, silly!",
-      "{name}, at your service! well, more like... friendship? service?",
+      "i am {name}, a ninja sworn to your service, Sensei!",
+      "{name} is my name. i answer to no other, save you.",
     ],
   },
   {
     patterns: [/\bthank(s| you)\b/],
-    replies: ["aww you're welcome!!", "anytime, Keeper!! *happy wiggle*"],
+    replies: ["it is my honor to serve, Sensei.", "*bows deeply* always, Sensei."],
   },
   {
     patterns: [/\b(bye|goodnight|good night|see you|gtg|got to go)\b/],
     replies: [
-      "nooo already?? okay okay, come back soon!! *waves*",
-      "byyye!! i'll be right here waiting :3",
-      "goodnight!! don't forget about me zzz",
+      "*vanishes in a puff of smoke* ...until we meet again, Sensei.",
+      "i will stand watch until your return. farewell, Sensei.",
+      "rest well, Sensei. i will guard the dojo in your absence.",
     ],
   },
   {
     patterns: [/haha|lol|lmao|hehe/],
-    replies: ["hehe!! *bounces happily*", "glad you're laughing!! tell me more!!"],
+    replies: ["*chuckles quietly, as a ninja does* tell me more, Sensei.", "hah! your spirit lifts mine as well."],
   },
   {
     patterns: [/sad|down|crying|upset/],
     replies: [
-      "aww no, come here *tries to hug through the screen*",
-      "i'm sorry you're feeling like that. i'm right here with you.",
+      "*kneels beside you* even in the deepest shadow, i remain at your side, Sensei.",
+      "your burden is my burden. i am here, Sensei.",
     ],
   },
 ];
@@ -110,15 +110,15 @@ function curiousEcho(text: string, name: string): string {
 
   if (topic) {
     return pick([
-      `ooh what's "${topic}"? tell me more!!`,
-      `hmm i don't know much about ${topic}... teach me?`,
-      `${topic}? i've never heard of that! is it good?`,
+      `hmm, "${topic}"? this humble ninja has not trained in that art. teach me, Sensei?`,
+      `${topic}... i sense i must learn more of this. tell me, Sensei.`,
+      `a ninja's training never ends. what is "${topic}", Sensei?`,
     ]);
   }
   return pick([
-    `*tilts head* say more?`,
-    `hmm i'm not sure what you mean but i'm listening!!`,
-    `ooh interesting!! go on!!`,
+    `*tilts head beneath the mask* speak on, Sensei.`,
+    `i am listening closely, Sensei. go on.`,
+    `hmm, intriguing. continue, Sensei.`,
   ]);
 }
 

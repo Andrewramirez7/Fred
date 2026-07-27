@@ -18,7 +18,7 @@ export type PetState = {
 
 export const STORAGE_KEY = "tamagotchi-state-v1";
 
-export const DEFAULT_NAME = "Chip";
+export const DEFAULT_NAME = "Kuro";
 
 export function freshState(name: string = DEFAULT_NAME): PetState {
   return {
@@ -28,7 +28,7 @@ export function freshState(name: string = DEFAULT_NAME): PetState {
     messages: [
       {
         role: "pet",
-        text: `*wiggles out of the egg* whoa!! hi!! are you my Keeper?? i'm ${name}!! :D`,
+        text: `*appears in a puff of smoke and bows* hai, Sensei! i am ${name}, your loyal ninja. i await your training!`,
       },
     ],
   };
@@ -93,14 +93,14 @@ export function moodEmoji(stats: Stats): string {
   const m = mood(stats);
   switch (m) {
     case "hungry":
-      return "(´•ᵕ•` )🍖";
+      return "🥷🍙";
     case "sleepy":
-      return "(－ω－) zzz";
+      return "🥷💤";
     case "grumpy":
-      return "(ಠ益ಠ)";
+      return "🥷💢";
     case "ecstatic":
-      return "(๑>ᴗ<๑)";
+      return "🥷✨";
     default:
-      return "(◕‿◕)";
+      return "🥷";
   }
 }
