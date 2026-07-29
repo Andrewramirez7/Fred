@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import creaturesData from "@/src/data/creatures.json";
 import CreaturePanel from "@/components/CreaturePanel";
 
-type Move = { name: string; power: number; type: string };
+type Move = { name: string; power: number; type: string; maxUses?: number };
 type Creature = {
   id: string;
   name: string;
@@ -35,6 +35,14 @@ function resolveAttack(move: Move, attackerAttack: number, defenderDefense: numb
 
 const SHAKE_MS = 400;
 
+function initialUses(moves: Move[]) {
+  const uses: Record<string, number> = {};
+  for (const move of moves) {
+    if (move.maxUses !== undefined) uses[move.name] = move.maxUses;
+  }
+  return uses;
+}
+
 export default function Home() {
   const [playerHp, setPlayerHp] = useState(player.maxHp);
   const [enemyIndex, setEnemyIndex] = useState(0);
@@ -44,6 +52,7 @@ export default function Home() {
   const [result, setResult] = useState<"victory" | "defeat" | null>(null);
   const [playerShake, setPlayerShake] = useState(false);
   const [enemyShake, setEnemyShake] = useState(false);
+  const [usesLeft, setUsesLeft] = useState<Record<string, number>>(() => initialUses(player.moves));
   const logEndRef = useRef<HTMLDivElement>(null);
 
   const enemy = wildEnemies[enemyIndex];
@@ -60,7 +69,12 @@ export default function Home() {
 
   function handleMove(move: Move) {
     if (busy || result) return;
+    if (move.maxUses !== undefined && (usesLeft[move.name] ?? 0) <= 0) return;
     setBusy(true);
+
+    if (move.maxUses !== undefined) {
+      setUsesLeft((u) => ({ ...u, [move.name]: u[move.name] - 1 }));
+    }
 
     // Player attacks immediately.
     const { damage: playerDmg, superEffective } = resolveAttack(move, player.attack, enemy.defense, enemy.type);
@@ -119,6 +133,7 @@ export default function Home() {
     setEnemyHp(wildEnemies[0].maxHp);
     setLog([`A wild ${wildEnemies[0].name} appears!`]);
     setResult(null);
+    setUsesLeft(initialUses(player.moves));
   }
 
   return (
@@ -142,19 +157,23 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          {player.moves.map((move) => (
-            <button
-              key={move.name}
-              disabled={busy || !!result}
-              onClick={() => handleMove(move)}
-              className="flex flex-col items-center text-[11px] px-2 py-2 rounded-sm bg-black/40 border border-ninja/30 text-mist active:scale-95 disabled:opacity-40"
-            >
-              <span className="font-bold">{move.name}</span>
-              <span className="text-mist/60">
-                {move.type} · {move.power} pwr
-              </span>
-            </button>
-          ))}
+          {player.moves.map((move) => {
+            const outOfUses = move.maxUses !== undefined && (usesLeft[move.name] ?? 0) <= 0;
+            return (
+              <button
+                key={move.name}
+                disabled={busy || !!result || outOfUses}
+                onClick={() => handleMove(move)}
+                className="flex flex-col items-center text-[11px] px-2 py-2 rounded-sm bg-black/40 border border-ninja/30 text-mist active:scale-95 disabled:opacity-40"
+              >
+                <span className="font-bold">{move.name}</span>
+                <span className="text-mist/60">
+                  {move.type} · {move.power} pwr
+                  {move.maxUses !== undefined && ` · ${usesLeft[move.name] ?? 0}/${move.maxUses} left`}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {result && (

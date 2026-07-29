@@ -5,14 +5,14 @@
       "id": "player-001",
       "name": "Stox",
       "type": "Fire",
-      "maxHp": 45,
+      "maxHp": 100,
       "attack": 14,
       "defense": 10,
       "speed": 16,
       "moves": [
         { "name": "Ember Bite", "power": 35, "type": "Fire" },
         { "name": "Quick Slash", "power": 20, "type": "Normal" },
-        { "name": "Flame Dash", "power": 45, "type": "Fire" },
+        { "name": "Flame Dash", "power": 45, "type": "Fire", "maxUses": 1 },
         { "name": "Tail Whip", "power": 15, "type": "Normal" }
       ]
     }
@@ -22,7 +22,7 @@
       "id": "wild-001",
       "name": "Stoop",
       "type": "Mud",
-      "maxHp": 38,
+      "maxHp": 85,
       "attack": 11,
       "defense": 14,
       "speed": 8,
@@ -36,7 +36,7 @@
       "id": "wild-002",
       "name": "Crank",
       "type": "Rock",
-      "maxHp": 30,
+      "maxHp": 85,
       "attack": 12,
       "defense": 8,
       "speed": 18,
