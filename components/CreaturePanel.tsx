@@ -29,15 +29,21 @@ export default function CreaturePanel({
   creature,
   hp,
   align,
+  shake,
 }: {
   creature: Creature;
   hp: number;
   align: "left" | "right";
+  shake?: boolean;
 }) {
   const icon = <span className="text-3xl">{TYPE_EMOJI[creature.type] ?? "❓"}</span>;
 
   return (
-    <div className={`flex flex-col gap-2 ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
+    <div
+      className={`flex flex-col gap-2 ${align === "right" ? "items-end text-right" : "items-start text-left"} ${
+        shake ? "animate-shake" : ""
+      }`}
+    >
       <div className="flex items-center gap-2">
         {align === "left" && icon}
         <div>
