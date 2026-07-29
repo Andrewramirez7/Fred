@@ -1,0 +1,49 @@
+{
+  "playerCreatures": [
+    {
+      "id": "player-001",
+      "name": "Emberfox",
+      "type": "Fire",
+      "maxHp": 45,
+      "attack": 14,
+      "defense": 10,
+      "speed": 16,
+      "moves": [
+        { "name": "Ember Bite", "power": 35, "type": "Fire" },
+        { "name": "Quick Slash", "power": 20, "type": "Normal" },
+        { "name": "Flame Dash", "power": 45, "type": "Fire" },
+        { "name": "Tail Whip", "power": 15, "type": "Normal" }
+      ]
+    }
+  ],
+  "wildEnemyCreatures": [
+    {
+      "id": "wild-001",
+      "name": "Mossbeetle",
+      "type": "Grass",
+      "maxHp": 38,
+      "attack": 11,
+      "defense": 14,
+      "speed": 8,
+      "moves": [
+        { "name": "Leaf Cutter", "power": 30, "type": "Grass" },
+        { "name": "Body Slam", "power": 25, "type": "Normal" },
+        { "name": "Spore Cloud", "power": 20, "type": "Grass" }
+      ]
+    },
+    {
+      "id": "wild-002",
+      "name": "Sparkrat",
+      "type": "Electric",
+      "maxHp": 30,
+      "attack": 12,
+      "defense": 8,
+      "speed": 18,
+      "moves": [
+        { "name": "Static Nip", "power": 25, "type": "Electric" },
+        { "name": "Quick Attack", "power": 18, "type": "Normal" },
+        { "name": "Volt Surge", "power": 40, "type": "Electric" }
+      ]
+    }
+  ]
+}
