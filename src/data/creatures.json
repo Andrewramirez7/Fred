@@ -1,5 +1,6 @@
 {
   "universe": "Glorpot",
+  "startingCageSpheres": 3,
   "playerCreatures": [
     {
       "id": "player-001",
@@ -14,6 +15,21 @@
         { "name": "Quick Slash", "power": 20, "type": "Normal" },
         { "name": "Flame Dash", "power": 45, "type": "Fire", "maxUses": 1 },
         { "name": "Tail Whip", "power": 15, "type": "Normal" }
+      ]
+    },
+    {
+      "id": "player-002",
+      "name": "Volcra",
+      "type": "Rock",
+      "maxHp": 110,
+      "attack": 12,
+      "defense": 18,
+      "speed": 10,
+      "moves": [
+        { "name": "Boulder Crash", "power": 30, "type": "Rock" },
+        { "name": "Guard Bash", "power": 20, "type": "Normal" },
+        { "name": "Seismic Slam", "power": 50, "type": "Rock", "maxUses": 1 },
+        { "name": "Pebble Toss", "power": 15, "type": "Normal" }
       ]
     }
   ],
@@ -44,6 +60,62 @@
         { "name": "Rock Throw", "power": 25, "type": "Rock" },
         { "name": "Quick Attack", "power": 18, "type": "Normal" },
         { "name": "Boulder Toss", "power": 40, "type": "Rock" }
+      ]
+    },
+    {
+      "id": "wild-003",
+      "name": "Nosk Whelp",
+      "type": "Ghost",
+      "maxHp": 90,
+      "attack": 18,
+      "defense": 14,
+      "speed": 20,
+      "moves": [
+        { "name": "Phantom Claw", "power": 25, "type": "Ghost" },
+        { "name": "Startle", "power": 15, "type": "Normal" },
+        { "name": "Shadow Lunge", "power": 30, "type": "Ghost" }
+      ]
+    },
+    {
+      "id": "wild-004",
+      "name": "Nosk Stalker",
+      "type": "Ghost",
+      "maxHp": 100,
+      "attack": 20,
+      "defense": 16,
+      "speed": 22,
+      "moves": [
+        { "name": "Spectral Bite", "power": 30, "type": "Ghost" },
+        { "name": "Night Pounce", "power": 22, "type": "Normal" },
+        { "name": "Haunting Wail", "power": 35, "type": "Ghost" }
+      ]
+    },
+    {
+      "id": "wild-005",
+      "name": "Nosk Wraith",
+      "type": "Ghost",
+      "maxHp": 110,
+      "attack": 24,
+      "defense": 18,
+      "speed": 18,
+      "moves": [
+        { "name": "Dread Howl", "power": 32, "type": "Ghost" },
+        { "name": "Crushing Fang", "power": 28, "type": "Normal" },
+        { "name": "Eclipse Slash", "power": 40, "type": "Ghost" }
+      ]
+    },
+    {
+      "id": "wild-006",
+      "name": "Nosk Matriarch",
+      "type": "Ghost",
+      "maxHp": 130,
+      "attack": 28,
+      "defense": 20,
+      "speed": 24,
+      "moves": [
+        { "name": "Void Rend", "power": 45, "type": "Ghost" },
+        { "name": "Herd Call", "power": 25, "type": "Normal" },
+        { "name": "Nightmare Fang", "power": 50, "type": "Ghost" }
       ]
     }
   ]

@@ -16,10 +16,12 @@ type Creature = {
   moves: Move[];
 };
 
-const player: Creature = creaturesData.playerCreatures[0];
+const playerCreatures: Creature[] = creaturesData.playerCreatures;
 const wildEnemies: Creature[] = creaturesData.wildEnemyCreatures;
+const STARTING_CAGE_SPHERES: number = creaturesData.startingCageSpheres;
 
 // This universe's elemental cycle: Fire dries out Mud, Mud erodes Rock, Rock smothers Fire.
+// Ghost-types sit outside the cycle, but the Nosk herd makes up for it with raw power.
 const BEATS: Record<string, string> = { Fire: "Mud", Mud: "Rock", Rock: "Fire" };
 
 function hasAdvantage(attackType: string, defendType: string) {
@@ -35,16 +37,28 @@ function resolveAttack(move: Move, attackerAttack: number, defenderDefense: numb
 
 const SHAKE_MS = 400;
 
-function initialUses(moves: Move[]) {
+function usesKey(creatureId: string, moveName: string) {
+  return `${creatureId}:${moveName}`;
+}
+
+function initialUses(creatures: Creature[]) {
   const uses: Record<string, number> = {};
-  for (const move of moves) {
-    if (move.maxUses !== undefined) uses[move.name] = move.maxUses;
+  for (const creature of creatures) {
+    for (const move of creature.moves) {
+      if (move.maxUses !== undefined) uses[usesKey(creature.id, move.name)] = move.maxUses;
+    }
   }
   return uses;
 }
 
+function initialHp(creatures: Creature[]) {
+  return Object.fromEntries(creatures.map((c) => [c.id, c.maxHp]));
+}
+
 export default function Home() {
-  const [playerHp, setPlayerHp] = useState(player.maxHp);
+  const [hp, setHp] = useState<Record<string, number>>(() => initialHp(playerCreatures));
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [mustSwitch, setMustSwitch] = useState(false);
   const [enemyIndex, setEnemyIndex] = useState(0);
   const [enemyHp, setEnemyHp] = useState(wildEnemies[0].maxHp);
   const [log, setLog] = useState<string[]>([`A wild ${wildEnemies[0].name} appears!`]);
@@ -52,9 +66,11 @@ export default function Home() {
   const [result, setResult] = useState<"victory" | "defeat" | null>(null);
   const [playerShake, setPlayerShake] = useState(false);
   const [enemyShake, setEnemyShake] = useState(false);
-  const [usesLeft, setUsesLeft] = useState<Record<string, number>>(() => initialUses(player.moves));
+  const [usesLeft, setUsesLeft] = useState<Record<string, number>>(() => initialUses(playerCreatures));
+  const [cageSpheresLeft, setCageSpheresLeft] = useState(STARTING_CAGE_SPHERES);
   const logEndRef = useRef<HTMLDivElement>(null);
 
+  const active = playerCreatures[activeIndex];
   const enemy = wildEnemies[enemyIndex];
 
   useEffect(() => {
@@ -67,73 +83,123 @@ export default function Home() {
     setTimeout(() => setShake(false), SHAKE_MS);
   }
 
-  function handleMove(move: Move) {
-    if (busy || result) return;
-    if (move.maxUses !== undefined && (usesLeft[move.name] ?? 0) <= 0) return;
-    setBusy(true);
-
-    if (move.maxUses !== undefined) {
-      setUsesLeft((u) => ({ ...u, [move.name]: u[move.name] - 1 }));
-    }
-
-    // Player attacks immediately.
-    const { damage: playerDmg, superEffective } = resolveAttack(move, player.attack, enemy.defense, enemy.type);
-    const nextEnemyHp = Math.max(0, enemyHp - playerDmg);
-    setEnemyHp(nextEnemyHp);
-    triggerShake("enemy");
-    setLog((l) => [
-      ...l,
-      `${player.name} used ${move.name} for ${playerDmg} damage!${superEffective ? " It was super effective!" : ""}`,
-    ]);
-
-    if (nextEnemyHp <= 0) {
-      if (enemyIndex + 1 < wildEnemies.length) {
-        const next = wildEnemies[enemyIndex + 1];
-        setLog((l) => [...l, `${enemy.name} was defeated!`, `A wild ${next.name} appears!`]);
-        setEnemyIndex(enemyIndex + 1);
-        setEnemyHp(next.maxHp);
-      } else {
-        setLog((l) => [...l, `${enemy.name} was defeated! You won the battle!`]);
-        setResult("victory");
-      }
-      setBusy(false);
-      return;
-    }
-
-    // Enemy automatically picks a move and counterattacks after a 1 second delay.
+  // Enemy automatically picks a move and counterattacks the given creature after a 1 second delay.
+  function scheduleEnemyAttack(target: Creature, targetHpBefore: number) {
     setTimeout(() => {
       const enemyMove = enemy.moves[Math.floor(Math.random() * enemy.moves.length)];
-      const { damage: enemyDmg, superEffective: enemySuperEffective } = resolveAttack(
-        enemyMove,
-        enemy.attack,
-        player.defense,
-        player.type
-      );
-      const nextPlayerHp = Math.max(0, playerHp - enemyDmg);
-      setPlayerHp(nextPlayerHp);
+      const { damage, superEffective } = resolveAttack(enemyMove, enemy.attack, target.defense, target.type);
+      const nextHp = Math.max(0, targetHpBefore - damage);
+      setHp((h) => ({ ...h, [target.id]: nextHp }));
       triggerShake("player");
       setLog((l) => [
         ...l,
-        `${enemy.name} used ${enemyMove.name} for ${enemyDmg} damage!${
-          enemySuperEffective ? " It was super effective!" : ""
-        }`,
+        `${enemy.name} used ${enemyMove.name} for ${damage} damage!${superEffective ? " It was super effective!" : ""}`,
       ]);
 
-      if (nextPlayerHp <= 0) {
-        setLog((l) => [...l, `${player.name} fainted! You lost the battle.`]);
-        setResult("defeat");
+      if (nextHp <= 0) {
+        const anyAlive = playerCreatures.some((c) => c.id !== target.id && hp[c.id] > 0);
+        if (anyAlive) {
+          setLog((l) => [...l, `${target.name} fainted! Choose your next creature.`]);
+          setMustSwitch(true);
+        } else {
+          setLog((l) => [...l, `${target.name} fainted! You lost the battle.`]);
+          setResult("defeat");
+        }
       }
       setBusy(false);
     }, 1000);
   }
 
+  // Advances to the next wild encounter, or ends the battle in victory if the herd is cleared.
+  function advanceEncounter(clearMessage: string) {
+    if (enemyIndex + 1 < wildEnemies.length) {
+      const next = wildEnemies[enemyIndex + 1];
+      setLog((l) => [...l, clearMessage, `A wild ${next.name} appears!`]);
+      setEnemyIndex(enemyIndex + 1);
+      setEnemyHp(next.maxHp);
+      setBusy(false);
+    } else {
+      setLog((l) => [...l, clearMessage, "You won the battle!"]);
+      setResult("victory");
+      setBusy(false);
+    }
+  }
+
+  function handleMove(move: Move) {
+    if (busy || result || mustSwitch) return;
+    const key = usesKey(active.id, move.name);
+    if (move.maxUses !== undefined && (usesLeft[key] ?? 0) <= 0) return;
+    setBusy(true);
+
+    if (move.maxUses !== undefined) {
+      setUsesLeft((u) => ({ ...u, [key]: u[key] - 1 }));
+    }
+
+    // Player attacks immediately.
+    const { damage, superEffective } = resolveAttack(move, active.attack, enemy.defense, enemy.type);
+    const nextEnemyHp = Math.max(0, enemyHp - damage);
+    setEnemyHp(nextEnemyHp);
+    triggerShake("enemy");
+    setLog((l) => [
+      ...l,
+      `${active.name} used ${move.name} for ${damage} damage!${superEffective ? " It was super effective!" : ""}`,
+    ]);
+
+    if (nextEnemyHp <= 0) {
+      advanceEncounter(`${enemy.name} was defeated!`);
+      return;
+    }
+
+    scheduleEnemyAttack(active, hp[active.id]);
+  }
+
+  function handleCatch() {
+    if (busy || result || mustSwitch || cageSpheresLeft <= 0) return;
+    setBusy(true);
+    setCageSpheresLeft((c) => c - 1);
+
+    const catchChance = Math.max(0.1, Math.min(0.9, 1.1 - enemyHp / enemy.maxHp));
+    const caught = Math.random() < catchChance;
+
+    if (caught) {
+      setLog((l) => [...l, `You threw a CageSphere... ${enemy.name} was caught!`]);
+      advanceEncounter(`${enemy.name} is safely contained.`);
+      return;
+    }
+
+    setLog((l) => [...l, `You threw a CageSphere... ${enemy.name} broke free!`]);
+    scheduleEnemyAttack(active, hp[active.id]);
+  }
+
+  function handleSwitch(idx: number) {
+    if (idx === activeIndex || result) return;
+    const target = playerCreatures[idx];
+    if (hp[target.id] <= 0) return;
+
+    if (mustSwitch) {
+      setLog((l) => [...l, `${target.name}, go!`]);
+      setActiveIndex(idx);
+      setMustSwitch(false);
+      return;
+    }
+
+    if (busy) return;
+    setBusy(true);
+    setLog((l) => [...l, `You withdrew ${active.name} and sent out ${target.name}!`]);
+    setActiveIndex(idx);
+    scheduleEnemyAttack(target, hp[target.id]);
+  }
+
   function restart() {
-    setPlayerHp(player.maxHp);
+    setHp(initialHp(playerCreatures));
+    setActiveIndex(0);
+    setMustSwitch(false);
     setEnemyIndex(0);
     setEnemyHp(wildEnemies[0].maxHp);
     setLog([`A wild ${wildEnemies[0].name} appears!`]);
     setResult(null);
-    setUsesLeft(initialUses(player.moves));
+    setUsesLeft(initialUses(playerCreatures));
+    setCageSpheresLeft(STARTING_CAGE_SPHERES);
   }
 
   return (
@@ -142,8 +208,27 @@ export default function Home() {
         <h1 className="text-center text-mist text-sm tracking-wide">⚔️ Glorpot Battle Arena</h1>
 
         <div className="rounded-2xl border-4 border-black/40 bg-screen p-4 grid grid-cols-2 gap-4">
-          <CreaturePanel creature={player} hp={playerHp} align="left" shake={playerShake} />
+          <CreaturePanel creature={active} hp={hp[active.id]} align="left" shake={playerShake} />
           <CreaturePanel creature={enemy} hp={enemyHp} align="right" shake={enemyShake} />
+        </div>
+
+        <div className="flex gap-1.5">
+          {playerCreatures.map((creature, idx) => {
+            const fainted = hp[creature.id] <= 0;
+            const isActive = idx === activeIndex;
+            return (
+              <button
+                key={creature.id}
+                disabled={isActive || fainted || result !== null || (busy && !mustSwitch)}
+                onClick={() => handleSwitch(idx)}
+                className={`flex-1 text-[10px] px-2 py-1.5 rounded-sm border active:scale-95 disabled:opacity-40 ${
+                  isActive ? "border-ninja bg-ninja/10 text-ninja" : "border-ninja/30 bg-black/40 text-mist"
+                } ${mustSwitch && !isActive && !fainted ? "animate-pulse" : ""}`}
+              >
+                {creature.name} {fainted ? "(fainted)" : `${hp[creature.id]}/${creature.maxHp}`}
+              </button>
+            );
+          })}
         </div>
 
         <div>
@@ -156,25 +241,40 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          {player.moves.map((move) => {
-            const outOfUses = move.maxUses !== undefined && (usesLeft[move.name] ?? 0) <= 0;
-            return (
-              <button
-                key={move.name}
-                disabled={busy || !!result || outOfUses}
-                onClick={() => handleMove(move)}
-                className="flex flex-col items-center text-[11px] px-2 py-2 rounded-sm bg-black/40 border border-ninja/30 text-mist active:scale-95 disabled:opacity-40"
-              >
-                <span className="font-bold">{move.name}</span>
-                <span className="text-mist/60">
-                  {move.type} · {move.power} pwr
-                  {move.maxUses !== undefined && ` · ${usesLeft[move.name] ?? 0}/${move.maxUses} left`}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {mustSwitch ? (
+          <p className="text-center text-[11px] text-mist/60">Choose a creature above to send out!</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              {active.moves.map((move) => {
+                const key = usesKey(active.id, move.name);
+                const outOfUses = move.maxUses !== undefined && (usesLeft[key] ?? 0) <= 0;
+                return (
+                  <button
+                    key={move.name}
+                    disabled={busy || !!result || outOfUses}
+                    onClick={() => handleMove(move)}
+                    className="flex flex-col items-center text-[11px] px-2 py-2 rounded-sm bg-black/40 border border-ninja/30 text-mist active:scale-95 disabled:opacity-40"
+                  >
+                    <span className="font-bold">{move.name}</span>
+                    <span className="text-mist/60">
+                      {move.type} · {move.power} pwr
+                      {move.maxUses !== undefined && ` · ${usesLeft[key] ?? 0}/${move.maxUses} left`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={handleCatch}
+              disabled={busy || !!result || cageSpheresLeft <= 0}
+              className="w-full text-[11px] px-3 py-2 rounded-sm bg-black/40 border border-yellow-500/40 text-yellow-400 active:scale-95 disabled:opacity-40"
+            >
+              🔴 Throw CageSphere ({cageSpheresLeft} left)
+            </button>
+          </>
+        )}
 
         {result && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 rounded-3xl bg-black/85 backdrop-blur-sm animate-overlayIn">
