@@ -2,7 +2,7 @@
   "playerCreatures": [
     {
       "id": "player-001",
-      "name": "Emberfox",
+      "name": "Stox",
       "type": "Fire",
       "maxHp": 45,
       "attack": 14,
