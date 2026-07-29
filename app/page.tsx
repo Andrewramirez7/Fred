@@ -1,172 +1,148 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import PetAvatar from "@/components/PetAvatar";
-import StatBar from "@/components/StatBar";
-import ChatPanel from "@/components/ChatPanel";
-import SwapIcon from "@/components/SwapIcon";
-import { generateReply } from "@/lib/chatEngine";
-import { applyDecay, feed, play, rest, freshState, migrateState, STORAGE_KEY, type PetState } from "@/lib/pet";
-import { themes, nextCharacter } from "@/lib/themes";
+import { useState } from "react";
+import creaturesData from "@/src/data/creatures.json";
+import CreaturePanel from "@/components/CreaturePanel";
+
+type Move = { name: string; power: number; type: string };
+type Creature = {
+  id: string;
+  name: string;
+  type: string;
+  maxHp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  moves: Move[];
+};
+
+const player: Creature = creaturesData.playerCreatures[0];
+const wildEnemies: Creature[] = creaturesData.wildEnemyCreatures;
+
+// This universe's elemental cycle: Fire dries out Mud, Mud erodes Rock, Rock smothers Fire.
+const BEATS: Record<string, string> = { Fire: "Mud", Mud: "Rock", Rock: "Fire" };
+
+function effectiveness(attackType: string, defendType: string) {
+  if (BEATS[attackType] === defendType) return 1.5;
+  if (BEATS[defendType] === attackType) return 0.75;
+  return 1;
+}
+
+function rollDamage(attacker: Creature, defender: Creature, move: Move) {
+  const eff = effectiveness(move.type, defender.type);
+  const base = move.power * (attacker.attack / defender.defense) * eff;
+  const variance = 0.85 + Math.random() * 0.3;
+  return Math.max(1, Math.round(base * variance));
+}
 
 export default function Home() {
-  const [state, setState] = useState<PetState | null>(null);
-  const [pending, setPending] = useState(false);
-  const [nameDraft, setNameDraft] = useState("");
+  const [playerHp, setPlayerHp] = useState(player.maxHp);
+  const [enemyIndex, setEnemyIndex] = useState(0);
+  const [enemyHp, setEnemyHp] = useState(wildEnemies[0].maxHp);
+  const [log, setLog] = useState<string[]>([`A wild ${wildEnemies[0].name} appears!`]);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<"victory" | "defeat" | null>(null);
 
-  // Load from localStorage on mount.
-  useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        setState(applyDecay(migrateState(JSON.parse(raw))));
-        return;
-      } catch {
-        // fall through to fresh state
+  const enemy = wildEnemies[enemyIndex];
+
+  function handleMove(move: Move) {
+    if (busy || result) return;
+    setBusy(true);
+
+    const messages: string[] = [];
+    let nextPlayerHp = playerHp;
+    let nextEnemyHp = enemyHp;
+    const order: ("player" | "enemy")[] =
+      player.speed >= enemy.speed ? ["player", "enemy"] : ["enemy", "player"];
+
+    for (const side of order) {
+      if (side === "player") {
+        if (nextEnemyHp <= 0) continue;
+        const dmg = rollDamage(player, enemy, move);
+        nextEnemyHp = Math.max(0, nextEnemyHp - dmg);
+        messages.push(`${player.name} used ${move.name}! ${enemy.name} took ${dmg} damage.`);
+      } else {
+        if (nextPlayerHp <= 0) continue;
+        const enemyMove = enemy.moves[Math.floor(Math.random() * enemy.moves.length)];
+        const dmg = rollDamage(enemy, player, enemyMove);
+        nextPlayerHp = Math.max(0, nextPlayerHp - dmg);
+        messages.push(`${enemy.name} used ${enemyMove.name}! ${player.name} took ${dmg} damage.`);
       }
     }
-    setState(null);
-  }, []);
 
-  // Persist on every change.
-  useEffect(() => {
-    if (state) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    setPlayerHp(nextPlayerHp);
+    setEnemyHp(nextEnemyHp);
 
-  // Decay stats once a minute while the tab is open.
-  useEffect(() => {
-    const id = setInterval(() => {
-      setState((s) => (s ? applyDecay(s) : s));
-    }, 60_000);
-    return () => clearInterval(id);
-  }, []);
+    if (nextPlayerHp <= 0) {
+      messages.push(`${player.name} fainted! You lost the battle.`);
+      setResult("defeat");
+    } else if (nextEnemyHp <= 0) {
+      if (enemyIndex + 1 < wildEnemies.length) {
+        const next = wildEnemies[enemyIndex + 1];
+        messages.push(`${enemy.name} was defeated!`, `A wild ${next.name} appears!`);
+        setEnemyIndex(enemyIndex + 1);
+        setEnemyHp(next.maxHp);
+      } else {
+        messages.push(`${enemy.name} was defeated! You won the battle!`);
+        setResult("victory");
+      }
+    }
 
-  function hatch() {
-    const name = nameDraft.trim() || themes.ninja.defaultName;
-    setState(freshState(name));
+    setLog((l) => [...l, ...messages]);
+    setBusy(false);
   }
 
-  function switchCharacter() {
-    setState((s) => {
-      if (!s) return s;
-      const next = nextCharacter(s.characterId);
-      return {
-        ...s,
-        characterId: next,
-        messages: [...s.messages, { role: "pet", text: themes[next].transformMessage(s.name) }],
-      };
-    });
+  function restart() {
+    setPlayerHp(player.maxHp);
+    setEnemyIndex(0);
+    setEnemyHp(wildEnemies[0].maxHp);
+    setLog([`A wild ${wildEnemies[0].name} appears!`]);
+    setResult(null);
   }
-
-  async function handleSend(text: string) {
-    if (!state) return;
-    const withUser: PetState = {
-      ...state,
-      messages: [...state.messages, { role: "user", text }],
-    };
-    setState(withUser);
-    setPending(true);
-
-    // Small delay so the reply feels like a real back-and-forth instead of instant.
-    const replyText = generateReply(text, withUser.name, withUser.stats, withUser.characterId);
-    await new Promise((r) => setTimeout(r, 400 + Math.random() * 500));
-
-    setState((s) =>
-      s ? { ...s, messages: [...s.messages, { role: "pet", text: replyText }] } : s
-    );
-    setPending(false);
-  }
-
-  if (state === null) {
-    return (
-      <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-shell rounded-3xl border-4 border-ninja/30 shadow-2xl shadow-ninja/10 p-6 w-full max-w-sm text-center space-y-4">
-          <div className="text-4xl">🥷💨</div>
-          <h1 className="text-mist text-sm">a shadow stirs in the dojo...</h1>
-          <p className="text-mist/60 text-xs">name your new ninja:</p>
-          <input
-            autoFocus
-            value={nameDraft}
-            onChange={(e) => setNameDraft(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && hatch()}
-            placeholder={themes.ninja.defaultName}
-            maxLength={16}
-            className="w-full text-center text-xs px-2 py-2 rounded-sm border border-ninja/30 bg-black/40 text-mist placeholder:text-mist/30 outline-none"
-          />
-          <button
-            onClick={hatch}
-            className="w-full text-xs px-3 py-2 rounded-sm bg-ninja text-black font-bold active:scale-95"
-          >
-            summon!
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  const theme = themes[state.characterId];
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
-      <div
-        className="relative rounded-3xl border-4 shadow-2xl p-4 w-full max-w-sm transition-colors duration-500"
-        style={{ backgroundColor: theme.colors.shell, borderColor: theme.colors.shellBorder }}
-      >
-        <button
-          onClick={switchCharacter}
-          title={`switch to ${themes[nextCharacter(state.characterId)].label}`}
-          className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black/40 border active:scale-90"
-          style={{ borderColor: theme.colors.accentBorder }}
-        >
-          <SwapIcon color={theme.colors.accent} />
-        </button>
+      <div className="bg-shell rounded-3xl border-4 border-ninja/30 shadow-2xl shadow-ninja/10 p-4 w-full max-w-2xl space-y-4">
+        <h1 className="text-center text-mist text-sm tracking-wide">⚔️ Glorpot Battle Arena</h1>
 
-        <div
-          className="rounded-2xl border-4 border-black/40 p-3 space-y-3 transition-colors duration-500"
-          style={{ backgroundColor: theme.colors.screen }}
-        >
-          <PetAvatar name={state.name} stats={state.stats} theme={theme} />
-
-          <div className="space-y-1.5">
-            <StatBar label="hunger" value={state.stats.hunger} accent={theme.colors.accent} mist={theme.colors.mist} />
-            <StatBar label="spirit" value={state.stats.happiness} accent={theme.colors.accent} mist={theme.colors.mist} />
-            <StatBar label="chakra" value={state.stats.energy} accent={theme.colors.accent} mist={theme.colors.mist} />
-          </div>
-
-          <div className="grid grid-cols-3 gap-1.5">
-            <button
-              onClick={() => setState((s) => (s ? feed(s) : s))}
-              className="text-[10px] py-1.5 rounded-sm bg-black/40 border active:scale-95"
-              style={{ borderColor: theme.colors.accentBorder, color: theme.colors.accent }}
-            >
-              {theme.actionEmoji.feed} {theme.actionLabels.feed}
-            </button>
-            <button
-              onClick={() => setState((s) => (s ? play(s) : s))}
-              className="text-[10px] py-1.5 rounded-sm bg-black/40 border active:scale-95"
-              style={{ borderColor: theme.colors.accentBorder, color: theme.colors.accent }}
-            >
-              {theme.actionEmoji.play} {theme.actionLabels.play}
-            </button>
-            <button
-              onClick={() => setState((s) => (s ? rest(s) : s))}
-              className="text-[10px] py-1.5 rounded-sm bg-black/40 border active:scale-95"
-              style={{ borderColor: theme.colors.accentBorder, color: theme.colors.accent }}
-            >
-              {theme.actionEmoji.rest} {theme.actionLabels.rest}
-            </button>
-          </div>
-
-          <div className="h-64">
-            <ChatPanel
-              name={state.name}
-              messages={state.messages}
-              onSend={handleSend}
-              disabled={pending}
-              theme={theme}
-            />
-          </div>
+        <div className="rounded-2xl border-4 border-black/40 bg-screen p-4 grid grid-cols-2 gap-4">
+          <CreaturePanel creature={player} hp={playerHp} align="left" />
+          <CreaturePanel creature={enemy} hp={enemyHp} align="right" />
         </div>
+
+        <div className="rounded-sm border border-ninja/30 bg-black/40 p-2 h-24 overflow-y-auto text-[11px] text-mist space-y-0.5">
+          {log.map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
+        </div>
+
+        {result ? (
+          <div className="text-center space-y-2">
+            <p className="text-sm text-mist">{result === "victory" ? "🏆 Victory!" : "💀 Defeat..."}</p>
+            <button
+              onClick={restart}
+              className="text-xs px-4 py-2 rounded-sm bg-ninja text-black font-bold active:scale-95"
+            >
+              battle again
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {player.moves.map((move) => (
+              <button
+                key={move.name}
+                disabled={busy}
+                onClick={() => handleMove(move)}
+                className="flex flex-col items-center text-[11px] px-2 py-2 rounded-sm bg-black/40 border border-ninja/30 text-mist active:scale-95 disabled:opacity-40"
+              >
+                <span className="font-bold">{move.name}</span>
+                <span className="text-mist/60">
+                  {move.type} · {move.power} pwr
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );
