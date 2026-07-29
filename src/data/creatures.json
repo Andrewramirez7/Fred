@@ -94,20 +94,6 @@
       ]
     },
     {
-      "id": "wild-004",
-      "name": "Nosk Stalker",
-      "type": "Ghost",
-      "maxHp": 70,
-      "attack": 20,
-      "defense": 16,
-      "speed": 22,
-      "moves": [
-        { "name": "Spectral Bite", "power": 30, "type": "Ghost" },
-        { "name": "Night Pounce", "power": 22, "type": "Normal" },
-        { "name": "Haunting Wail", "power": 35, "type": "Ghost" }
-      ]
-    },
-    {
       "id": "wild-005",
       "name": "Nosk Wraith",
       "type": "Ghost",
