@@ -22,17 +22,14 @@ const wildEnemies: Creature[] = creaturesData.wildEnemyCreatures;
 // This universe's elemental cycle: Fire dries out Mud, Mud erodes Rock, Rock smothers Fire.
 const BEATS: Record<string, string> = { Fire: "Mud", Mud: "Rock", Rock: "Fire" };
 
-function effectiveness(attackType: string, defendType: string) {
-  if (BEATS[attackType] === defendType) return 1.5;
-  if (BEATS[defendType] === attackType) return 0.75;
-  return 1;
+function hasAdvantage(attackType: string, defendType: string) {
+  return BEATS[attackType] === defendType;
 }
 
-function rollDamage(attacker: Creature, defender: Creature, move: Move) {
-  const eff = effectiveness(move.type, defender.type);
-  const base = move.power * (attacker.attack / defender.defense) * eff;
-  const variance = 0.85 + Math.random() * 0.3;
-  return Math.max(1, Math.round(base * variance));
+function calcDamage(move: Move, attackerAttack: number, defenderDefense: number, defenderType: string) {
+  const base = (move.power * attackerAttack) / defenderDefense;
+  const damage = hasAdvantage(move.type, defenderType) ? base * 1.5 : base;
+  return Math.max(1, Math.round(damage));
 }
 
 export default function Home() {
@@ -49,47 +46,40 @@ export default function Home() {
     if (busy || result) return;
     setBusy(true);
 
-    const messages: string[] = [];
-    let nextPlayerHp = playerHp;
-    let nextEnemyHp = enemyHp;
-    const order: ("player" | "enemy")[] =
-      player.speed >= enemy.speed ? ["player", "enemy"] : ["enemy", "player"];
-
-    for (const side of order) {
-      if (side === "player") {
-        if (nextEnemyHp <= 0) continue;
-        const dmg = rollDamage(player, enemy, move);
-        nextEnemyHp = Math.max(0, nextEnemyHp - dmg);
-        messages.push(`${player.name} used ${move.name}! ${enemy.name} took ${dmg} damage.`);
-      } else {
-        if (nextPlayerHp <= 0) continue;
-        const enemyMove = enemy.moves[Math.floor(Math.random() * enemy.moves.length)];
-        const dmg = rollDamage(enemy, player, enemyMove);
-        nextPlayerHp = Math.max(0, nextPlayerHp - dmg);
-        messages.push(`${enemy.name} used ${enemyMove.name}! ${player.name} took ${dmg} damage.`);
-      }
-    }
-
-    setPlayerHp(nextPlayerHp);
+    // Player attacks immediately.
+    const playerDmg = calcDamage(move, player.attack, enemy.defense, enemy.type);
+    const nextEnemyHp = Math.max(0, enemyHp - playerDmg);
     setEnemyHp(nextEnemyHp);
+    setLog((l) => [...l, `${player.name} used ${move.name}! ${enemy.name} took ${playerDmg} damage.`]);
 
-    if (nextPlayerHp <= 0) {
-      messages.push(`${player.name} fainted! You lost the battle.`);
-      setResult("defeat");
-    } else if (nextEnemyHp <= 0) {
+    if (nextEnemyHp <= 0) {
       if (enemyIndex + 1 < wildEnemies.length) {
         const next = wildEnemies[enemyIndex + 1];
-        messages.push(`${enemy.name} was defeated!`, `A wild ${next.name} appears!`);
+        setLog((l) => [...l, `${enemy.name} was defeated!`, `A wild ${next.name} appears!`]);
         setEnemyIndex(enemyIndex + 1);
         setEnemyHp(next.maxHp);
       } else {
-        messages.push(`${enemy.name} was defeated! You won the battle!`);
+        setLog((l) => [...l, `${enemy.name} was defeated! You won the battle!`]);
         setResult("victory");
       }
+      setBusy(false);
+      return;
     }
 
-    setLog((l) => [...l, ...messages]);
-    setBusy(false);
+    // Enemy automatically picks a move and counterattacks after a 1 second delay.
+    setTimeout(() => {
+      const enemyMove = enemy.moves[Math.floor(Math.random() * enemy.moves.length)];
+      const enemyDmg = calcDamage(enemyMove, enemy.attack, player.defense, player.type);
+      const nextPlayerHp = Math.max(0, playerHp - enemyDmg);
+      setPlayerHp(nextPlayerHp);
+      setLog((l) => [...l, `${enemy.name} used ${enemyMove.name}! ${player.name} took ${enemyDmg} damage.`]);
+
+      if (nextPlayerHp <= 0) {
+        setLog((l) => [...l, `${player.name} fainted! You lost the battle.`]);
+        setResult("defeat");
+      }
+      setBusy(false);
+    }, 1000);
   }
 
   function restart() {
