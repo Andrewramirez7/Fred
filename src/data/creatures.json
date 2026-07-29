@@ -33,6 +33,21 @@
         { "name": "Seismic Slam", "power": 50, "type": "Rock", "maxUses": 1 },
         { "name": "Pebble Toss", "power": 15, "type": "Normal" }
       ]
+    },
+    {
+      "id": "player-003",
+      "name": "Pluk",
+      "type": "Metal",
+      "maxHp": 100,
+      "attack": 15,
+      "defense": 14,
+      "speed": 14,
+      "moves": [
+        { "name": "Steel Claw", "power": 30, "type": "Metal" },
+        { "name": "Shard Fling", "power": 20, "type": "Metal" },
+        { "name": "Railgun Strike", "power": 50, "type": "Metal", "maxUses": 1 },
+        { "name": "Iron Slam", "power": 15, "type": "Normal" }
+      ]
     }
   ],
   "wildEnemyCreatures": [
@@ -68,7 +83,7 @@
       "id": "wild-003",
       "name": "Nosk Whelp",
       "type": "Ghost",
-      "maxHp": 90,
+      "maxHp": 70,
       "attack": 18,
       "defense": 14,
       "speed": 20,
@@ -82,7 +97,7 @@
       "id": "wild-004",
       "name": "Nosk Stalker",
       "type": "Ghost",
-      "maxHp": 100,
+      "maxHp": 70,
       "attack": 20,
       "defense": 16,
       "speed": 22,
@@ -96,7 +111,7 @@
       "id": "wild-005",
       "name": "Nosk Wraith",
       "type": "Ghost",
-      "maxHp": 110,
+      "maxHp": 70,
       "attack": 24,
       "defense": 18,
       "speed": 18,
@@ -110,7 +125,7 @@
       "id": "wild-006",
       "name": "Nosk Matriarch",
       "type": "Ghost",
-      "maxHp": 130,
+      "maxHp": 70,
       "attack": 28,
       "defense": 20,
       "speed": 24,

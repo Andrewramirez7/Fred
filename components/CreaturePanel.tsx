@@ -17,12 +17,16 @@ const TYPE_EMOJI: Record<string, string> = {
   Fire: "🔥",
   Mud: "🟤",
   Rock: "🪨",
+  Ghost: "👻",
+  Metal: "⚙️",
 };
 
 const TYPE_COLOR: Record<string, string> = {
   Fire: "#ff6b35",
   Mud: "#8b5e34",
   Rock: "#8d8d7a",
+  Ghost: "#6b5b95",
+  Metal: "#a8b0b8",
 };
 
 export default function CreaturePanel({
