@@ -19,6 +19,8 @@ type Creature = {
 const playerCreatures: Creature[] = creaturesData.playerCreatures;
 const wildEnemies: Creature[] = creaturesData.wildEnemyCreatures;
 const STARTING_CAGE_SPHERES: number = creaturesData.startingCageSpheres;
+const STARTING_HEALS: number = creaturesData.startingHeals;
+const HEAL_AMOUNT: number = creaturesData.healAmount;
 
 // This universe's elemental cycle: Fire dries out Mud, Mud erodes Rock, Rock smothers Fire.
 // Ghost-types sit outside the cycle, but the Nosk herd makes up for it with raw power.
@@ -68,6 +70,7 @@ export default function Home() {
   const [enemyShake, setEnemyShake] = useState(false);
   const [usesLeft, setUsesLeft] = useState<Record<string, number>>(() => initialUses(playerCreatures));
   const [cageSpheresLeft, setCageSpheresLeft] = useState(STARTING_CAGE_SPHERES);
+  const [healsLeft, setHealsLeft] = useState(STARTING_HEALS);
   const [caught, setCaught] = useState<Creature[]>([]);
   const [caughtBanner, setCaughtBanner] = useState<string | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -180,6 +183,19 @@ export default function Home() {
     scheduleEnemyAttack(active, hp[active.id]);
   }
 
+  function handleHeal() {
+    if (busy || result || mustSwitch || healsLeft <= 0 || hp[active.id] >= active.maxHp) return;
+    setBusy(true);
+    setHealsLeft((h) => h - 1);
+
+    const healedHp = Math.min(active.maxHp, hp[active.id] + HEAL_AMOUNT);
+    const restored = healedHp - hp[active.id];
+    setHp((h) => ({ ...h, [active.id]: healedHp }));
+    setLog((l) => [...l, `${active.name} used a Heal and recovered ${restored} HP!`]);
+
+    scheduleEnemyAttack(active, healedHp);
+  }
+
   function handleSwitch(idx: number) {
     if (idx === activeIndex || result) return;
     const target = roster[idx];
@@ -209,6 +225,7 @@ export default function Home() {
     setResult(null);
     setUsesLeft(initialUses(playerCreatures));
     setCageSpheresLeft(STARTING_CAGE_SPHERES);
+    setHealsLeft(STARTING_HEALS);
     setCaught([]);
     setCaughtBanner(null);
   }
@@ -255,8 +272,8 @@ export default function Home() {
         {mustSwitch ? (
           <p className="text-center text-[11px] text-mist/60">Choose a creature above to send out!</p>
         ) : (
-          <>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 flex-1">
               {active.moves.map((move) => {
                 const key = usesKey(active.id, move.name);
                 const outOfUses = move.maxUses !== undefined && (usesLeft[key] ?? 0) <= 0;
@@ -277,14 +294,28 @@ export default function Home() {
               })}
             </div>
 
-            <button
-              onClick={handleCatch}
-              disabled={busy || !!result || cageSpheresLeft <= 0}
-              className="w-full text-[11px] px-3 py-2 rounded-sm bg-black/40 border border-yellow-500/40 text-yellow-400 active:scale-95 disabled:opacity-40"
-            >
-              🔴 Throw CageSphere ({cageSpheresLeft} left)
-            </button>
-          </>
+            <div className="flex flex-col gap-2 w-28">
+              <button
+                onClick={handleHeal}
+                disabled={busy || !!result || healsLeft <= 0 || hp[active.id] >= active.maxHp}
+                className="flex-1 flex flex-col items-center justify-center text-[11px] px-2 py-2 rounded-sm bg-black/40 border border-green-500/40 text-green-400 active:scale-95 disabled:opacity-40"
+              >
+                <span className="font-bold">💚 Heal</span>
+                <span className="text-green-400/60">
+                  +{HEAL_AMOUNT} hp · {healsLeft}/{STARTING_HEALS} left
+                </span>
+              </button>
+
+              <button
+                onClick={handleCatch}
+                disabled={busy || !!result || cageSpheresLeft <= 0}
+                className="flex-1 flex flex-col items-center justify-center text-[11px] px-2 py-2 rounded-sm bg-black/40 border border-yellow-500/40 text-yellow-400 active:scale-95 disabled:opacity-40"
+              >
+                <span className="font-bold">🔴 CageSphere</span>
+                <span className="text-yellow-400/60">{cageSpheresLeft} left</span>
+              </button>
+            </div>
+          </div>
         )}
 
         {result && (

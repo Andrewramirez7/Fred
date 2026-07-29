@@ -1,6 +1,8 @@
 {
   "universe": "Glorpot",
   "startingCageSpheres": 3,
+  "startingHeals": 3,
+  "healAmount": 35,
   "playerCreatures": [
     {
       "id": "player-001",
