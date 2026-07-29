@@ -19,30 +19,30 @@
   "wildEnemyCreatures": [
     {
       "id": "wild-001",
-      "name": "Mossbeetle",
-      "type": "Grass",
+      "name": "Stoop",
+      "type": "Mud",
       "maxHp": 38,
       "attack": 11,
       "defense": 14,
       "speed": 8,
       "moves": [
-        { "name": "Leaf Cutter", "power": 30, "type": "Grass" },
+        { "name": "Mud Slap", "power": 30, "type": "Mud" },
         { "name": "Body Slam", "power": 25, "type": "Normal" },
-        { "name": "Spore Cloud", "power": 20, "type": "Grass" }
+        { "name": "Sludge Wave", "power": 20, "type": "Mud" }
       ]
     },
     {
       "id": "wild-002",
-      "name": "Sparkrat",
-      "type": "Electric",
+      "name": "Crank",
+      "type": "Rock",
       "maxHp": 30,
       "attack": 12,
       "defense": 8,
       "speed": 18,
       "moves": [
-        { "name": "Static Nip", "power": 25, "type": "Electric" },
+        { "name": "Rock Throw", "power": 25, "type": "Rock" },
         { "name": "Quick Attack", "power": 18, "type": "Normal" },
-        { "name": "Volt Surge", "power": 40, "type": "Electric" }
+        { "name": "Boulder Toss", "power": 40, "type": "Rock" }
       ]
     }
   ]
