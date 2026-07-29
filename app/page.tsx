@@ -68,9 +68,12 @@ export default function Home() {
   const [enemyShake, setEnemyShake] = useState(false);
   const [usesLeft, setUsesLeft] = useState<Record<string, number>>(() => initialUses(playerCreatures));
   const [cageSpheresLeft, setCageSpheresLeft] = useState(STARTING_CAGE_SPHERES);
+  const [caught, setCaught] = useState<Creature[]>([]);
+  const [caughtBanner, setCaughtBanner] = useState<string | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
 
-  const active = playerCreatures[activeIndex];
+  const roster = [...playerCreatures, ...caught];
+  const active = roster[activeIndex];
   const enemy = wildEnemies[enemyIndex];
 
   useEffect(() => {
@@ -97,7 +100,7 @@ export default function Home() {
       ]);
 
       if (nextHp <= 0) {
-        const anyAlive = playerCreatures.some((c) => c.id !== target.id && hp[c.id] > 0);
+        const anyAlive = roster.some((c) => c.id !== target.id && hp[c.id] > 0);
         if (anyAlive) {
           setLog((l) => [...l, `${target.name} fainted! Choose your next creature.`]);
           setMustSwitch(true);
@@ -159,9 +162,15 @@ export default function Home() {
     setCageSpheresLeft((c) => c - 1);
 
     const catchChance = Math.max(0.1, Math.min(0.9, 1.1 - enemyHp / enemy.maxHp));
-    const caught = Math.random() < catchChance;
+    const didCatch = Math.random() < catchChance;
 
-    if (caught) {
+    if (didCatch) {
+      const newTeammate = enemy;
+      setCaught((c) => [...c, newTeammate]);
+      setHp((h) => ({ ...h, [newTeammate.id]: newTeammate.maxHp }));
+      setUsesLeft((u) => ({ ...u, ...initialUses([newTeammate]) }));
+      setCaughtBanner(newTeammate.name);
+      setTimeout(() => setCaughtBanner(null), 2500);
       setLog((l) => [...l, `You threw a CageSphere... ${enemy.name} was caught!`]);
       advanceEncounter(`${enemy.name} is safely contained.`);
       return;
@@ -173,7 +182,7 @@ export default function Home() {
 
   function handleSwitch(idx: number) {
     if (idx === activeIndex || result) return;
-    const target = playerCreatures[idx];
+    const target = roster[idx];
     if (hp[target.id] <= 0) return;
 
     if (mustSwitch) {
@@ -200,6 +209,8 @@ export default function Home() {
     setResult(null);
     setUsesLeft(initialUses(playerCreatures));
     setCageSpheresLeft(STARTING_CAGE_SPHERES);
+    setCaught([]);
+    setCaughtBanner(null);
   }
 
   return (
@@ -212,8 +223,8 @@ export default function Home() {
           <CreaturePanel creature={enemy} hp={enemyHp} align="right" shake={enemyShake} />
         </div>
 
-        <div className="flex gap-1.5">
-          {playerCreatures.map((creature, idx) => {
+        <div className="flex flex-wrap gap-1.5">
+          {roster.map((creature, idx) => {
             const fainted = hp[creature.id] <= 0;
             const isActive = idx === activeIndex;
             return (
@@ -221,7 +232,7 @@ export default function Home() {
                 key={creature.id}
                 disabled={isActive || fainted || result !== null || (busy && !mustSwitch)}
                 onClick={() => handleSwitch(idx)}
-                className={`flex-1 text-[10px] px-2 py-1.5 rounded-sm border active:scale-95 disabled:opacity-40 ${
+                className={`text-[10px] px-2 py-1.5 rounded-sm border active:scale-95 disabled:opacity-40 ${
                   isActive ? "border-ninja bg-ninja/10 text-ninja" : "border-ninja/30 bg-black/40 text-mist"
                 } ${mustSwitch && !isActive && !fainted ? "animate-pulse" : ""}`}
               >
@@ -287,6 +298,15 @@ export default function Home() {
             >
               battle again
             </button>
+          </div>
+        )}
+
+        {caughtBanner && (
+          <div className="pointer-events-none absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 rounded-3xl bg-black/80 backdrop-blur-sm animate-overlayIn">
+            <p className="text-xl font-bold text-yellow-400 text-center px-4">
+              🎉 WOW! YOU CAUGHT A {caughtBanner.toUpperCase()}!
+            </p>
+            <p className="text-[11px] text-mist/70">You can now switch to {caughtBanner} in your party.</p>
           </div>
         )}
       </div>
